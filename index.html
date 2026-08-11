@@ -656,10 +656,18 @@
   function getFiltered() {
     var q = normalizeFa(state.query);
     if (!q) return [];
-    return state.entries.filter(function (e, idx) {
+    var seen = new Set();
+    var out = [];
+    state.entries.forEach(function (e, idx) {
       e.__idx = idx;
-      return normalizeFa(e.title).indexOf(q) !== -1;
+      if (normalizeFa(e.title).indexOf(q) === -1) return;
+      var vid = extractYouTubeId(e.url);
+      var key = vid || normalizeFa(e.title);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(e);
     });
+    return out;
   }
 
   function render() {
