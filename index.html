@@ -1,0 +1,825 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>آرشیو فیلم | Reel Archive</title>
+<meta name="description" content="جست‌وجو در فیلم‌های آرشیو‌شده در فایل‌های CSV و پخش مستقیم از یوتیوب" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&family=Zilla+Slab:ital,wght@0,400;0,600;0,700;1,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1c1712;
+    --bg-elevated:#241e17;
+    --bg-card:#2a2318;
+    --line:#443a29;
+    --line-cool:#3f4c48;
+    --text:#ede3d0;
+    --text-dim:#a99a7c;
+    --text-faint:#7c705a;
+    --accent:#c98a3b;
+    --accent-bright:#e0a75a;
+    --accent-red:#8b3a3a;
+    --accent-red-bright:#b1523f;
+    --radius:10px;
+    --serif: 'Zilla Slab', Georgia, serif;
+    --fa: 'Vazirmatn', Tahoma, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top, rgba(201,138,59,0.08), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--fa);
+    line-height:1.6;
+    min-height:100vh;
+  }
+  ::selection{background:var(--accent); color:#1c1712;}
+
+  [dir-ltr]{direction:ltr; unicode-bidi:isolate; font-family:var(--mono);}
+
+  a{color:inherit;}
+
+  /* ---------- sprocket strip: the signature motif ---------- */
+  .sprockets{
+    display:flex;
+    flex-direction:column;
+    justify-content:space-around;
+    align-items:center;
+    flex:0 0 22px;
+    padding:10px 0;
+    background: repeating-linear-gradient(
+      var(--bg-elevated),
+      var(--bg-elevated) 100%
+    );
+    border-inline-start:1px solid var(--line);
+  }
+  .sprockets span{
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1px solid var(--line-cool);
+    flex:0 0 auto;
+  }
+
+  /* ---------- header / marquee ---------- */
+  header.marquee{
+    position:relative;
+    padding:48px 28px 34px;
+    border-bottom:2px solid var(--line);
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.15), transparent 60%),
+      var(--bg-elevated);
+    overflow:hidden;
+  }
+  header.marquee::before,
+  header.marquee::after{
+    content:"";
+    position:absolute;
+    top:0; bottom:0;
+    width:16px;
+    background-image: radial-gradient(circle, var(--bg) 3px, transparent 3.5px);
+    background-size: 16px 22px;
+    background-repeat: repeat-y;
+    background-position: center;
+    opacity:0.6;
+  }
+  header.marquee::before{ right:0; }
+  header.marquee::after{ left:0; }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:0.18em;
+    color:var(--accent);
+    text-transform:uppercase;
+    direction:ltr;
+    display:inline-block;
+    margin-bottom:14px;
+    border:1px solid var(--accent);
+    border-radius:999px;
+    padding:4px 12px;
+  }
+  h1{
+    font-family:var(--fa);
+    font-weight:800;
+    font-size:clamp(28px, 4vw, 44px);
+    margin:0 0 8px;
+    color:var(--text);
+    letter-spacing:0.01em;
+  }
+  header .sub{
+    color:var(--text-dim);
+    font-size:15px;
+    max-width:640px;
+    margin:0;
+  }
+
+  .stats-row{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:22px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+  }
+  .stats-row b{color:var(--accent-bright); font-weight:600;}
+
+  /* ---------- search ---------- */
+  .search-wrap{
+    max-width:1040px;
+    margin:-22px auto 0;
+    padding:0 28px;
+    position:relative;
+    z-index:2;
+  }
+  .ticket{
+    display:flex;
+    align-items:stretch;
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:0 14px 30px -14px rgba(0,0,0,0.6);
+    overflow:hidden;
+  }
+  .ticket .icon{
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    width:52px;
+    color:var(--accent);
+    border-inline-end:1px dashed var(--line);
+  }
+  .ticket input[type="search"]{
+    flex:1 1 auto;
+    background:transparent;
+    border:0;
+    outline:0;
+    color:var(--text);
+    font-family:var(--fa);
+    font-size:16px;
+    padding:16px 14px;
+  }
+  .ticket input[type="search"]::placeholder{color:var(--text-faint);}
+  .ticket .count-pill{
+    flex:0 0 auto;
+    align-self:center;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-dim);
+    padding:6px 14px;
+    margin-inline-end:10px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    white-space:nowrap;
+  }
+
+  .chips{
+    display:flex; gap:8px; flex-wrap:wrap;
+    margin-top:12px;
+  }
+  .chip{
+    font-family:var(--mono);
+    font-size:11px;
+    direction:ltr;
+    padding:5px 11px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background:var(--bg-elevated);
+    color:var(--text-dim);
+    cursor:pointer;
+    user-select:none;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .chip:hover{border-color:var(--accent);}
+  .chip.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#1c1712;
+    font-weight:500;
+  }
+
+  /* ---------- player ---------- */
+  .player-wrap{
+    max-width:1040px;
+    margin:22px auto 0;
+    padding:0 28px;
+  }
+  .projector{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--bg-elevated);
+    padding:14px;
+  }
+  .projector .screen{
+    position:relative;
+    aspect-ratio:16/9;
+    border-radius:6px;
+    overflow:hidden;
+    background:#0d0b08;
+    box-shadow: inset 0 0 0 1px var(--line), inset 0 0 60px rgba(0,0,0,0.6);
+  }
+  .screen iframe{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    border:0;
+  }
+  .screen .idle{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    gap:10px;
+    color:var(--text-faint);
+    text-align:center;
+    padding:20px;
+  }
+  .screen .idle .ring{
+    width:46px; height:46px;
+    border-radius:50%;
+    border:2px solid var(--line-cool);
+    border-top-color:var(--accent);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .now-playing{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 4px 2px;
+    flex-wrap:wrap;
+  }
+  .now-playing .title{
+    font-weight:600;
+    font-size:15px;
+  }
+  .now-playing .src{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-faint);
+    direction:ltr;
+  }
+  .now-playing a.ext{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--accent-bright);
+    text-decoration:none;
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:5px 12px;
+    white-space:nowrap;
+    direction:ltr;
+  }
+  .now-playing a.ext:hover{border-color:var(--accent-bright);}
+
+  /* ---------- list ---------- */
+  main{
+    max-width:1040px;
+    margin:0 auto;
+    padding:26px 28px 70px;
+  }
+  .status-line{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-faint);
+    margin:4px 0 16px;
+    min-height:16px;
+  }
+  .status-line.warn{color:var(--accent-red-bright);}
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+    gap:12px;
+  }
+  .card{
+    display:flex;
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    cursor:pointer;
+    transition:border-color .15s, transform .1s;
+  }
+  .card:hover{border-color:var(--accent);}
+  .card:active{transform:scale(0.995);}
+  .card.playing{
+    border-color:var(--accent-bright);
+    box-shadow:0 0 0 1px var(--accent-bright);
+  }
+  .card .body{
+    flex:1 1 auto;
+    min-width:0;
+    padding:13px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .card .title{
+    font-size:14.5px;
+    font-weight:500;
+    color:var(--text);
+    overflow:hidden;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+  }
+  .card .meta{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .card .src-badge{
+    font-family:var(--mono);
+    font-size:10px;
+    color:var(--text-faint);
+    direction:ltr;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .card .play-ico{
+    flex:0 0 auto;
+    width:26px; height:26px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#1c1712;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-faint);
+  }
+  .empty-state .big{
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:20px;
+    color:var(--text-dim);
+    margin-bottom:8px;
+  }
+
+  /* ---------- footer / uploader ---------- */
+  footer{
+    max-width:1040px;
+    margin:0 auto;
+    padding:0 28px 60px;
+  }
+  .upload-box{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    flex-wrap:wrap;
+    color:var(--text-faint);
+    font-size:13px;
+  }
+  .upload-box label.btn{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent-bright);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:7px 14px;
+    cursor:pointer;
+    white-space:nowrap;
+    direction:ltr;
+  }
+  .upload-box label.btn:hover{border-color:var(--accent-bright);}
+  .upload-box input[type=file]{display:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    .card{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="marquee">
+  <span class="eyebrow" dir-ltr>reel archive · csv → youtube</span>
+  <h1>آرشیو فیلم</h1>
+  <p class="sub">همهٔ فایل‌های CSV موجود در ریشهٔ این مخزن به‌صورت خودکار خوانده می‌شوند؛ عنوان‌ها را جست‌وجو کنید و مستقیم از یوتیوب پخش کنید.</p>
+  <div class="stats-row" dir-ltr id="statsRow">
+    <span>files: <b id="statFiles">0</b></span>
+    <span>titles: <b id="statTitles">0</b></span>
+    <span>source: <b id="statSource">detecting…</b></span>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <div class="ticket">
+    <span class="icon" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+    <input type="search" id="searchInput" placeholder="جست‌وجوی عنوان فیلم…" autocomplete="off" />
+    <span class="count-pill" id="resultCount">۰ نتیجه</span>
+  </div>
+  <div class="chips" id="chipRow" dir-ltr></div>
+</div>
+
+<div class="player-wrap">
+  <div class="projector">
+    <div class="screen" id="screen">
+      <div class="idle" id="idleState">
+        <div class="ring">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </div>
+        <span dir-ltr style="font-size:12px;">select a film to play</span>
+      </div>
+    </div>
+    <div class="now-playing" id="nowPlaying" style="display:none;">
+      <div>
+        <div class="title" id="npTitle"></div>
+        <div class="src" id="npSrc"></div>
+      </div>
+      <a class="ext" id="npExt" target="_blank" rel="noopener">open on youtube ↗</a>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="status-line" id="statusLine">در حال جست‌وجوی فایل‌های CSV…</div>
+  <div class="grid" id="grid"></div>
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="big">هیچ نتیجه‌ای یافت نشد</div>
+    <div dir-ltr style="font-size:12px;">try a different search term</div>
+  </div>
+</main>
+
+<footer>
+  <div class="upload-box">
+    <span>برای آزمایش محلی، یا افزودن فایل CSV بدون commit مستقیم، می‌توانید فایل بارگذاری کنید:</span>
+    <label class="btn" for="fileInput">+ load csv file(s)</label>
+    <input type="file" id="fileInput" accept=".csv,text/csv" multiple />
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var state = {
+    entries: [],        // {title, url, source}
+    sources: new Set(), // active source filenames
+    activeSources: new Set(),
+    query: "",
+    playingIndex: -1
+  };
+
+  var els = {
+    grid: document.getElementById('grid'),
+    empty: document.getElementById('emptyState'),
+    statusLine: document.getElementById('statusLine'),
+    resultCount: document.getElementById('resultCount'),
+    searchInput: document.getElementById('searchInput'),
+    chipRow: document.getElementById('chipRow'),
+    statFiles: document.getElementById('statFiles'),
+    statTitles: document.getElementById('statTitles'),
+    statSource: document.getElementById('statSource'),
+    fileInput: document.getElementById('fileInput'),
+    screen: document.getElementById('screen'),
+    idleState: document.getElementById('idleState'),
+    nowPlaying: document.getElementById('nowPlaying'),
+    npTitle: document.getElementById('npTitle'),
+    npSrc: document.getElementById('npSrc'),
+    npExt: document.getElementById('npExt')
+  };
+
+  // ---------------------------------------------------------------
+  // CSV parsing (handles quoted fields, commas/newlines inside quotes)
+  // ---------------------------------------------------------------
+  function parseCSV(text) {
+    var rows = [], row = [], field = '', inQuotes = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i], next = text[i + 1];
+      if (inQuotes) {
+        if (c === '"' && next === '"') { field += '"'; i++; }
+        else if (c === '"') { inQuotes = false; }
+        else { field += c; }
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(field); field = ''; }
+        else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+        else if (c === '\r') { /* skip */ }
+        else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(function (r) { return r.length && r.some(function (f) { return f.trim() !== ''; }); });
+  }
+
+  function rowsToEntries(rows, sourceName) {
+    if (!rows.length) return [];
+    var header = rows[0].map(function (h) { return h.trim().toLowerCase(); });
+    var titleIdx = header.findIndex(function (h) { return /title|name|عنوان|نام/.test(h); });
+    var urlIdx = header.findIndex(function (h) { return /url|link|youtube|آدرس|لینک/.test(h); });
+    var start = 0;
+    if (titleIdx === -1 || urlIdx === -1) {
+      // no recognizable header -> assume col0=title, col1=url, and treat row 0 as data
+      titleIdx = 0; urlIdx = 1;
+    } else {
+      start = 1;
+    }
+    var out = [];
+    for (var i = start; i < rows.length; i++) {
+      var r = rows[i];
+      var title = (r[titleIdx] || '').trim();
+      var url = (r[urlIdx] || '').trim();
+      if (!url) continue;
+      out.push({ title: title || url, url: url, source: sourceName });
+    }
+    return out;
+  }
+
+  // ---------------------------------------------------------------
+  // YouTube helpers
+  // ---------------------------------------------------------------
+  function extractYouTubeId(url) {
+    try {
+      var u = new URL(url.trim());
+      if (/youtu\.be$/.test(u.hostname)) return u.pathname.slice(1).split('/')[0];
+      if (u.searchParams.get('v')) return u.searchParams.get('v');
+      var m = u.pathname.match(/\/(embed|shorts|live)\/([a-zA-Z0-9_-]{6,})/);
+      if (m) return m[2];
+    } catch (e) { /* fall through */ }
+    var m2 = url.match(/([a-zA-Z0-9_-]{11})(?:[?&]|$)/);
+    return m2 ? m2[1] : null;
+  }
+
+  // ---------------------------------------------------------------
+  // Persian-aware normalization for tolerant search
+  // ---------------------------------------------------------------
+  function normalizeFa(s) {
+    return (s || '')
+      .toLowerCase()
+      .replace(/[يى]/g, 'ی')
+      .replace(/ك/g, 'ک')
+      .replace(/[\u064B-\u065F\u0670]/g, '')
+      .replace(/[إأآ]/g, 'ا')
+      .trim();
+  }
+
+  // ---------------------------------------------------------------
+  // Discovery: figure out which CSV files to load, and load them.
+  // Priority: query params override -> GitHub API (root contents)
+  //           -> local csv-manifest.json -> nothing (manual upload only)
+  // ---------------------------------------------------------------
+  function detectRepo() {
+    var params = new URLSearchParams(location.search);
+    if (params.get('owner') && params.get('repo')) {
+      return { owner: params.get('owner'), repo: params.get('repo'), branch: params.get('branch') || null };
+    }
+    var host = location.hostname;
+    if (host.endsWith('.github.io')) {
+      var owner = host.split('.')[0];
+      var parts = location.pathname.split('/').filter(Boolean);
+      var repo = parts.length > 0 ? parts[0] : (owner + '.github.io');
+      return { owner: owner, repo: repo, branch: null };
+    }
+    return null;
+  }
+
+  function loadViaGitHubApi() {
+    var info = detectRepo();
+    if (!info) return Promise.resolve(null);
+    var branchQuery = info.branch ? ('?ref=' + encodeURIComponent(info.branch)) : '';
+    var apiUrl = 'https://api.github.com/repos/' + info.owner + '/' + info.repo + '/contents/' + branchQuery;
+    return fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github+json' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('github api ' + res.status);
+        return res.json();
+      })
+      .then(function (list) {
+        var csvFiles = list.filter(function (item) {
+          return item.type === 'file' && /\.csv$/i.test(item.name) && item.download_url;
+        });
+        if (!csvFiles.length) return { source: info.owner + '/' + info.repo, files: [] };
+        return Promise.all(csvFiles.map(function (f) {
+          return fetch(f.download_url).then(function (r) { return r.text(); }).then(function (text) {
+            return { name: f.name, text: text };
+          });
+        })).then(function (files) {
+          return { source: info.owner + '/' + info.repo + ' (github api)', files: files };
+        });
+      })
+      .catch(function () { return null; });
+  }
+
+  function loadViaManifest() {
+    return fetch('csv-manifest.json')
+      .then(function (res) { if (!res.ok) throw new Error('no manifest'); return res.json(); })
+      .then(function (names) {
+        if (!Array.isArray(names) || !names.length) return null;
+        return Promise.all(names.map(function (name) {
+          return fetch(name).then(function (r) {
+            if (!r.ok) throw new Error('missing ' + name);
+            return r.text();
+          }).then(function (text) { return { name: name, text: text }; });
+        })).then(function (files) {
+          return { source: 'csv-manifest.json', files: files };
+        });
+      })
+      .catch(function () { return null; });
+  }
+
+  function addFiles(files, sourceLabel) {
+    var added = 0;
+    files.forEach(function (f) {
+      var rows = parseCSV(f.text);
+      var entries = rowsToEntries(rows, f.name);
+      state.entries = state.entries.concat(entries);
+      state.sources.add(f.name);
+      added += entries.length;
+    });
+    return added;
+  }
+
+  function init() {
+    Promise.resolve()
+      .then(loadViaGitHubApi)
+      .then(function (githubResult) {
+        if (githubResult && githubResult.files.length) return githubResult;
+        return loadViaManifest();
+      })
+      .then(function (result) {
+        if (result && result.files && result.files.length) {
+          addFiles(result.files, result.source);
+          els.statSource.textContent = result.source;
+          setStatus(state.entries.length + ' عنوان از ' + state.sources.size + ' فایل بارگذاری شد.');
+        } else {
+          els.statSource.textContent = 'none detected';
+          setStatus('فایل CSV به‌صورت خودکار پیدا نشد — از دکمهٔ «بارگذاری فایل» در پایین صفحه استفاده کنید، یا csv-manifest.json را بررسی کنید.', true);
+        }
+        finishLoad();
+      });
+  }
+
+  function finishLoad() {
+    state.activeSources = new Set(state.sources);
+    renderChips();
+    renderStats();
+    render();
+  }
+
+  function setStatus(msg, warn) {
+    els.statusLine.textContent = msg;
+    els.statusLine.className = 'status-line' + (warn ? ' warn' : '');
+  }
+
+  function renderStats() {
+    els.statFiles.textContent = state.sources.size;
+    els.statTitles.textContent = state.entries.length;
+  }
+
+  function renderChips() {
+    els.chipRow.innerHTML = '';
+    if (state.sources.size <= 1) return; // no need to filter a single source
+    state.sources.forEach(function (name) {
+      var chip = document.createElement('span');
+      chip.className = 'chip' + (state.activeSources.has(name) ? ' active' : '');
+      chip.textContent = name;
+      chip.addEventListener('click', function () {
+        if (state.activeSources.has(name)) state.activeSources.delete(name);
+        else state.activeSources.add(name);
+        renderChips();
+        render();
+      });
+      els.chipRow.appendChild(chip);
+    });
+  }
+
+  function getFiltered() {
+    var q = normalizeFa(state.query);
+    return state.entries.filter(function (e, idx) {
+      e.__idx = idx;
+      if (!state.activeSources.has(e.source)) return false;
+      if (!q) return true;
+      return normalizeFa(e.title).indexOf(q) !== -1;
+    });
+  }
+
+  function render() {
+    var filtered = getFiltered();
+    els.resultCount.textContent = toFaDigits(filtered.length) + ' نتیجه';
+    els.grid.innerHTML = '';
+    els.empty.style.display = filtered.length ? 'none' : 'block';
+
+    var frag = document.createDocumentFragment();
+    filtered.forEach(function (entry) {
+      frag.appendChild(buildCard(entry));
+    });
+    els.grid.appendChild(frag);
+  }
+
+  function toFaDigits(n) {
+    var map = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+    return String(n).replace(/\d/g, function (d) { return map[d]; });
+  }
+
+  function buildCard(entry) {
+    var card = document.createElement('div');
+    card.className = 'card' + (entry.__idx === state.playingIndex ? ' playing' : '');
+    card.addEventListener('click', function () { playEntry(entry); });
+
+    var sprockets = document.createElement('div');
+    sprockets.className = 'sprockets';
+    for (var i = 0; i < 3; i++) sprockets.appendChild(document.createElement('span'));
+
+    var body = document.createElement('div');
+    body.className = 'body';
+
+    var title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = entry.title;
+
+    var meta = document.createElement('div');
+    meta.className = 'meta';
+
+    var badge = document.createElement('span');
+    badge.className = 'src-badge';
+    badge.setAttribute('dir-ltr', '');
+    badge.textContent = entry.source;
+
+    var playIco = document.createElement('span');
+    playIco.className = 'play-ico';
+    playIco.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>';
+
+    meta.appendChild(badge);
+    meta.appendChild(playIco);
+    body.appendChild(title);
+    body.appendChild(meta);
+
+    card.appendChild(sprockets);
+    card.appendChild(body);
+    return card;
+  }
+
+  function playEntry(entry) {
+    var id = extractYouTubeId(entry.url);
+    if (!id) {
+      setStatus('نتوانستیم شناسهٔ ویدیوی یوتیوب را از این آدرس استخراج کنیم: ' + entry.url, true);
+      return;
+    }
+    state.playingIndex = entry.__idx;
+    els.idleState.style.display = 'none';
+    var iframe = els.screen.querySelector('iframe');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      els.screen.appendChild(iframe);
+    }
+    iframe.src = 'https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0';
+
+    els.nowPlaying.style.display = 'flex';
+    els.npTitle.textContent = entry.title;
+    els.npSrc.textContent = entry.source;
+    els.npExt.href = entry.url;
+
+    render();
+    document.querySelector('.player-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // ---------------------------------------------------------------
+  // events
+  // ---------------------------------------------------------------
+  var debounceTimer = null;
+  els.searchInput.addEventListener('input', function (e) {
+    var v = e.target.value;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function () {
+      state.query = v;
+      render();
+    }, 120);
+  });
+
+  els.fileInput.addEventListener('change', function (e) {
+    var files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    Promise.all(files.map(function (f) {
+      return f.text().then(function (text) { return { name: f.name, text: text }; });
+    })).then(function (loaded) {
+      addFiles(loaded, 'manual upload');
+      state.activeSources = new Set(state.sources);
+      renderChips();
+      renderStats();
+      render();
+      setStatus(loaded.length + ' فایل به‌صورت دستی افزوده شد.');
+    });
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>
